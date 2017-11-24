@@ -48,7 +48,14 @@ class Automate(AutomateBase):
                 """ -> list[State]
                 rend la liste des états accessibles
                 """            
-                return 
+
+                states = []
+
+                for t in self.listTransitions :
+                        if not(t.stateDest in states) :
+                                states.append(t.stateDest)
+
+                return states
 
 
 
@@ -65,8 +72,43 @@ class Automate(AutomateBase):
                 """ Automate x str -> bool
                 rend True si auto accepte mot, False sinon
                 """
-                return 
 
+                flag = False
+
+                for s in auto.listStates :
+                        if s.init :
+                                flag = auto.accepteRec(s, mot, 0)
+                        if flag :
+                                return flag
+
+                return flag
+
+
+        def accepteRec(self, state, mot, index) :
+                if index == len(mot) and state.fin :
+                        return True
+                elif index == len(mot) and not(state.fin) :
+                        return False
+
+                flag = False
+
+                for t in self.transitions(state) :
+                        if t.etiquette == mot[index] :
+                                flag = self.accepteRec(t.stateDest, mot, index + 1)
+                                if flag :
+                                        return flag
+
+                return flag
+
+
+        def transitions(self, state) :
+                trans = []
+
+                for t in self.listTransitions :
+                        if t.stateSrc == state :
+                                trans.append(t)
+
+                return trans
 
 
         @staticmethod
@@ -74,15 +116,45 @@ class Automate(AutomateBase):
                 """ Automate x str -> bool
                 rend True si auto est complet pour alphabet, False sinon
                 """
-                return
 
-        
+                for s in auto.listStates :
+                        for c in alphabet :
+                                if not(auto.transExists(s, c)) :
+                                        return False
+
+                return True
+
+        def transExists(self, state, etiquette) :
+                for t in self.transitions(state) :
+                        if t.etiquette == etiquette :
+                                return True
+
+                return False
+
         @staticmethod
         def estDeterministe(auto) :
                 """ Automate  -> bool
                 rend True si auto est déterministe, False sinon
                 """
-                return
+
+                ei = 0
+
+                for s in auto.listStates :
+                        if s.init :
+                                ei += 1
+
+                if ei != 1 :
+                        return False
+
+                for s in auto.listStates :
+                        etiquettes = []
+                        for t in auto.transitions(s) :
+                                if t.etiquette in etiquettes :
+                                        return False
+                                else :
+                                        etiquettes.append(t.etiquette)
+
+                return True
 
 
        
@@ -91,7 +163,28 @@ class Automate(AutomateBase):
                 """ Automate x str -> Automate
                 rend l'automate complété d'auto, par rapport à alphabet
                 """
-                return 
+
+                if Automate.estComplet(auto, alphabet) :
+                        return auto
+
+                newId = 0
+
+                for s in auto.listStates :
+                        newId += int(s.id)
+
+                newState = State(newId, False, False, "Puit")
+                auto.addState(newState)
+
+                for s in auto.listStates :
+                        etiquettes = []
+                        for t in auto.transitions(s) :
+                                if not(t.etiquette in etiquettes) :
+                                        etiquettes.append(t.etiquette)
+                        for c in alphabet :
+                                if not(c in etiquettes) :
+                                        auto.addTransition(Transition(s, c, newState))
+
+                return auto
 
 
        
