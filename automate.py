@@ -10,6 +10,11 @@ from itertools import product
 from automateBase import AutomateBase
 
 
+class TransitionList :
+        def __init__(self, src, eti, fin) :
+                self.src = src
+                self.eti = eti
+                self.fin = fin
 
 class Automate(AutomateBase):
         
@@ -193,7 +198,86 @@ class Automate(AutomateBase):
                 """ Automate  -> Automate
                 rend l'automate déterminisé d'auto
                 """
-                return 
+
+                alphabet = auto.alphabet()
+                transitions = []
+
+                Q = []
+                E = [[auto.initState()]]
+
+                while len(E) > 0 :
+                        print 'itération ! {}\n\n'.format(E)
+                        S = E[0]
+                        E.remove(S)
+                        Q.append(S)
+
+                        for l in alphabet :
+                                temp = []
+                                for k in S :
+                                        for t in auto.transitions(k) :
+                                                if t.etiquette == l and not(t.stateDest in temp) :
+                                                        temp.append(t.stateDest)
+
+                                if not(temp in Q) and not(temp in E) :
+                                        E.append(temp)
+
+                                transitions.append(TransitionList(S, l, temp))
+
+                states = []
+                i = 0
+
+                for o in Q :
+                        flag = False
+                        for p in o :
+                                if p.fin :
+                                        flag = True
+                        s = State(i, i == 0, flag)
+                        i += 1
+                        states.append(s)
+
+                transitionsFinales = []
+
+                for m in transitions :
+                        t = Transition(states[auto.indexOf(Q, m.src)], m.eti, states[auto.indexOf(Q, m.fin)])
+                        transitionsFinales.append(t)
+
+                auto = Automate(transitionsFinales)
+
+                return auto
+
+        def listAreEquals(self, L, M) :
+                if len(L) != len(M) :
+                        return False
+
+                for i in range(len(L)) :
+                        if not(L[i].__eq__(M[i])) :
+                                return False
+
+                return True
+
+        def indexOf(self, T, S) :
+                i = 0
+                for t in T :
+                        if t == S :
+                                return i
+                        i += 1
+                return -1 
+
+        def alphabet(self) :
+                alphabet = []
+
+                for t in self.listTransitions :
+                        if not(t.etiquette in alphabet) :
+                                alphabet.append(t.etiquette)
+
+                return alphabet
+
+        def initState(self) :
+                for s in self.listStates :
+                        if s.init :
+                                return s
+
+                return None
 
 
         @staticmethod
@@ -201,7 +285,14 @@ class Automate(AutomateBase):
                 """ Automate x str -> Automate
                 rend  l'automate acceptant pour langage le complémentaire du langage de auto
                 """
-                return
+
+                auto2 = Automate.determinisation(auto)
+                auto3 = Automate.completeAutomate(auto2, alphabet)
+
+                for s in auto3.listStates :
+                        s.fin = not(s.fin)
+
+                return auto3
 
 
      

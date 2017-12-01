@@ -36,13 +36,22 @@ from automate import *
 
 # # -----------
 
+
 auto = Automate.creationAutomate("auto.txt")
 auto.label = 'A2'
 
 # print "----------------"
 
 # print(auto2)
-auto.show('Test_yolo')
+auto.show('Test_det')
+
+auto2 = Automate.determinisation(auto)
+auto2.label = 'A3'
+auto2.show('Test_det_fini')
+
+auto3 = Automate.complementaire(auto2, auto2.alphabet())
+auto3.label = 'B4'
+auto3.show('Test_det_fini_complementaire')
 
 # listMot = ["a", "ab", "bab", "aba", "abba", "abbabbbbbbabbabbaaaaabbbabbaaab"]
 # # FALSE, TRUE, TRUE, FALSE, FALSE, TRUE
@@ -56,8 +65,8 @@ auto.show('Test_yolo')
 
 # print Automate.estDeterministe(auto)
 
-auto1 = Automate.completeAutomate(auto, 'ab')
-auto1.show('Test_yolo_complet')
+# auto1 = Automate.completeAutomate(auto, 'ab')
+# auto1.show('Test_yolo_complet')
 
 # -----------
 
