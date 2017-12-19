@@ -16,6 +16,9 @@ class TransitionList :
                 self.eti = eti
                 self.fin = fin
 
+        def __repr__(self) :
+                return "({}, {}, {})".format(self.src, self.eti, self.fin)
+
 class Automate(AutomateBase):
         
         def succElem(self, state, lettre):
@@ -206,7 +209,6 @@ class Automate(AutomateBase):
                 E = [[auto.initState()]]
 
                 while len(E) > 0 :
-                        print 'itération ! {}\n\n'.format(E)
                         S = E[0]
                         E.remove(S)
                         Q.append(S)
@@ -297,11 +299,46 @@ class Automate(AutomateBase):
 
      
         @staticmethod
-        def intersection (auto1, auto2):
+        def intersection (auto1d, auto2d):
                 """ Automate x Automate -> Automate
                 rend l'automate acceptant pour langage l'intersection des langages des deux automates
                 """
-                return 
+		#auto1d = Automate.determinisation(auto1)
+                #auto2d = Automate.determinisation(auto2)
+
+                L = [] #liste de couples
+                listeStates = [] # liste des états
+                listeTrans = []
+                L.append((auto1d.getListInitialStates()[0] , auto1d.getListInitialStates()[0] )) #couple initial
+                isFinal = L[0][0].fin and L[0][1].fin
+                listeStates.append(State(0 , True , isFinal)) 
+                alpha1 = auto1d.getAlphabetFromTransitions()
+                alpha2 = auto2d.getAlphabetFromTransitions()
+                alpha = []
+                for a  in alpha2 :
+                        if a in alpha1 :
+                                alpha.append(a) 
+                i = 0
+                j = 0
+                while(i < len(L) ) :
+                        for c in L[i:] :
+                                for l in alpha :
+                                        if len(auto1d.succElem(c[0] , l)) > 0 and len(auto2d.succElem(c[1], l)) > 0 :
+                                                couple = (auto1d.succElem(c[0] , l)[0] ,auto2d.succElem(c[1], l)[0] )
+                                                if couple not in L :
+                                                        L.append(couple)
+                                                        j = j + 1
+                                                        isFinal = couple[0].fin and couple[1].fin
+                                                        listeStates.append(State(j , False , isFinal ))
+                                                        trans = Transition(listeStates[i] , l , listeStates[j])
+                                                else :
+                                                        trans = Transition(listeStates[i] , l , listeStates[L.index(couple)])
+                                                if trans not in listeTrans :
+                                                        listeTrans.append(trans)
+                        i = i + 1
+                autoInter = Automate(listeTrans)
+                return autoInter
+               
 
 
         @staticmethod
@@ -309,9 +346,93 @@ class Automate(AutomateBase):
                 """ Automate x Automate -> Automate
                 rend l'automate acceptant pour langage l'union des langages des deux automates
                 """
-                return 
+
+                # auto1 = Automate.determinisation(auto1)
+                # auto2 = Automate.determinisation(auto2)
+
+                if not(Automate.estDeterministe(auto1)) or not(Automate.estDeterministe(auto2)) :
+                        print ("Les automates doivent être déterministes pour en faire l'union !")
+                        return None
+
+                auto2.changeIds(auto1)
+
+                print ("------\n{}\n------\n{}\n------").format(auto1, auto2)
+
+                alphabet = Automate.unionList(auto1.alphabet(), auto2.alphabet())
+                transitions = []
+
+                Q = []
+                E = [[auto1.initState(), auto2.initState()]]
+
+                zero = State(auto1.automateLength() + auto2.automateLength(), False, False)
+
+                while len(E) > 0 :
+                        print (E)
+                        S = E[0]
+                        E.remove(S)
+                        Q.append(S)
+
+                        for l in alphabet :
+                                temp = []
+                                for t in auto1.transitions(S[0]) :
+                                        if t.etiquette == l and not(t.stateDest in temp) :
+                                                temp.append(t.stateDest)
+                                if len(temp) == 0 :
+                                        temp.append(zero)
+
+                                for t in auto2.transitions(S[1]) :
+                                        if t.etiquette == l and not(t.stateDest in temp) :
+                                                temp.append(t.stateDest)
+                                if len(temp) == 1 :
+                                        temp.append(zero)
+
+                                if not(temp in Q) and not(temp in E) and len(temp) == 2 :
+                                        E.append(temp)
+
+                                transitions.append(TransitionList(S, l, temp))
+
+                states = []
+                i = 0
+
+                for o in Q :
+                        s = State(i, o[0].init or o[1].init, o[0].fin or o[1].fin)
+                        i += 1
+                        states.append(s)
+
+                transitionsFinales = []
+
+                for m in transitions :
+                        print (m)
+                        t = Transition(states[auto1.indexOf(Q, m.src)], m.eti, states[auto1.indexOf(Q, m.fin)])
+                        transitionsFinales.append(t)
+
+                auto = Automate(transitionsFinales)
+
+                return auto
+
+        @staticmethod
+        def unionList(l, m) :
+                u = []
+
+                for e in m :
+                        u.append(e)
+
+                for e in l :
+                        if not(e in m) :
+                                u.append(e)
+
+                return u
+
+        def changeIds(self, auto1) :
+                nb = auto1.automateLength()
+
+                for s in self.listStates :
+                        s.id = nb + int(s.id)
+                        s.label = str(s.id)
 
 
+        def automateLength(self) :
+                return len(self.listStates)
         
        
         @staticmethod
@@ -327,6 +448,21 @@ class Automate(AutomateBase):
                 """ Automate  -> Automate
                 rend l'automate acceptant pour langage l'étoile du langage de a
                 """
+		auto2 = copy.deepcopy(auto)
+                alpha = auto2.getAlphabetFromTransitions()
+                I = auto2.getListInitialStates()
+                for s in auto2.getListStates() :
+                        for e in alpha :
+                                A = auto.succElem(s , e)
+                                for elem in A :
+                                        if elem.fin :
+                                                for i in I :
+                                                        auto2.addTransition(Transition(s,e,i))
+
+
+                motvide = State(-1 , True , True , "eps")
+                auto2.addState(motvide)
+                return auto2
                 return 
 
 
