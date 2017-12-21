@@ -448,22 +448,127 @@ class Automate(AutomateBase):
                 """ Automate  -> Automate
                 rend l'automate acceptant pour langage l'étoile du langage de a
                 """
-		auto2 = copy.deepcopy(auto)
-                alpha = auto2.getAlphabetFromTransitions()
-                I = auto2.getListInitialStates()
-                for s in auto2.getListStates() :
-                        for e in alpha :
-                                A = auto.succElem(s , e)
-                                for elem in A :
-                                        if elem.fin :
-                                                for i in I :
-                                                        auto2.addTransition(Transition(s,e,i))
+		# auto2 = copy.deepcopy(auto)
+                # alpha = auto2.getAlphabetFromTransitions()
+                # I = auto2.getListInitialStates()
+                # for s in auto2.getListStates() :
+                #         for e in alpha :
+                #                 A = auto.succElem(s , e)
+                #                 for elem in A :
+                #                         if elem.fin :
+                #                                 for i in I :
+                #                                         auto2.addTransition(Transition(s,e,i))
 
 
-                motvide = State(-1 , True , True , "eps")
-                auto2.addState(motvide)
-                return auto2
-                return 
+                # motvide = State(-1 , True , True , "eps")
+                # auto2.addState(motvide)
+                # return auto2
+
+                if not(auto.estStandard()) :
+                        print "L'automate doit être standard (utiliser la fonction auto.standard() pour corriger le problème)"
+                        return
+
+                init = None
+                final = []
+
+                for e in auto.listStates :
+                        if e.fin and not(e.init) :
+                                final.append(e)
+
+                        if e.init :
+                                e.fin = True
+                                init = e
+
+                transitionsInit = auto.transitions(init)
+
+                for t in transitionsInit :
+                        for k in final :
+                                auto.addTransition(Transition(k, t.etiquette, t.stateDest))
+
+                return auto
+
+                
+
+        def estStandard (self) :
+                i = 0
+                for s in self.listStates :
+                        if s.init :
+                                i = i + 1
+                        
+                        if i > 1 :
+                                return False
+
+                initial = []
+
+                for s in self.listStates :
+                        if s.init : 
+                                initial.append(s)
+
+                for t in self.listTransitions :
+                        if t.stateDest in initial :
+                                return False
+
+                return True
+
+        def inter(self, l1, l2) :
+                tr = list()
+
+                for e in l1 :
+                        if e in l2 :
+                                tr.append(e)
+
+                return tr
+
+        def equState(self, state, states) :
+                for s in states :
+                        if s.id == state.id :
+                                return s
+
+                return None
+
+        @staticmethod
+        def standard (self) :
+                """ Automate -> Automate
+                rend la version standard de l'automate
+                """
+
+                if self.estStandard() :
+                        return self
+
+                states = []
+                init = []
+                final = []
+
+                for s in self.listStates :
+                        if s.init :
+                                init.append(s)
+
+                        if s.fin : 
+                                final.append(s)
+
+                        states.append(State(s.id, False, s.fin))
+
+                print states
+
+
+                d = State(len(self.listStates) + 1, True, True if len(self.inter(init, final)) != 0 else False)
+                states.append(d)
+
+                transitions = []
+
+                for t in self.listTransitions :
+                        transitions.append(Transition(self.equState(t.stateSrc, states), t.etiquette, self.equState(t.stateDest, states)))
+
+                for i in init :
+                        for t in self.transitions(i) :
+                                if not(Transition(d, t.etiquette, self.equState(t.stateDest, states)) in transitions) :
+                                        transitions.append(Transition(d, t.etiquette, self.equState(t.stateDest, states)))
+
+                return Automate(transitions, states)
+
+
+
+
 
 
 

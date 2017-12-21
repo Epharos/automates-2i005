@@ -37,21 +37,21 @@ from automate import *
 # # -----------
 
 
-auto = Automate.creationAutomate("auto.txt")
-auto.label = 'A2'
+# auto = Automate.creationAutomate("auto.txt")
+# auto.label = 'A2'
 
-# print "----------------"
+# # print "----------------"
 
-# print(auto2)
-auto.show('Test_det')
+# # print(auto2)
+# auto.show('Test_det')
 
-auto2 = Automate.determinisation(auto)
-auto2.label = 'A3'
-auto2.show('Test_det_fini')
+# auto2 = Automate.determinisation(auto)
+# auto2.label = 'A3'
+# auto2.show('Test_det_fini')
 
-auto3 = Automate.complementaire(auto2, auto2.alphabet())
-auto3.label = 'B4'
-auto3.show('Test_det_fini_complementaire')
+# auto3 = Automate.complementaire(auto2, auto2.alphabet())
+# auto3.label = 'B4'
+# auto3.show('Test_det_fini_complementaire')
 
 # listMot = ["a", "ab", "bab", "aba", "abba", "abbabbbbbbabbabbaaaaabbbabbaaab"]
 # # FALSE, TRUE, TRUE, FALSE, FALSE, TRUE
@@ -96,3 +96,18 @@ auto3.show('Test_det_fini_complementaire')
 # print auto1.getListTransitionsFrom(s1)
 
 # print auto1.succ([s0, s2, s1], 'a')
+
+# -----------
+
+auto = Automate.creationAutomate("auto.txt")
+print auto
+
+print "------------"
+
+auto2 = Automate.standard(auto)
+print auto2
+
+print "------------"
+
+auto3 = Automate.etoile(auto)
+print auto3
